@@ -40,7 +40,16 @@ export default class DemoApp extends React.Component {
       <I13nAnchor
         href="#"
         i13nModel={{ action: 'click', omnitureProps: {
-          pageName: 'ImJustALink',
+          pageName: 'the_world_if|blogs|DemocracyInAmerica',
+          server: 'economist.com',
+          channel: 'home',
+          prop1: 'the_world_if',
+          prop3: 'web',
+          prop4: 'blogs',
+          prop5: 'home',
+          prop11: loggedin,
+          prop13: 'anonymous',
+          prop31: today,
         } }}
       >This is a link</I13nAnchor>
     );

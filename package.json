@@ -125,6 +125,7 @@
     "watch": "parallelshell 'npm run doc:watch' 'npm run prepublish:watch' 'npm run serve'"
   },
   "devDependencies": {
+    "@economist/component-devpack": "^3.4.3",
     "babel": "^5.8.23",
     "babelify": "^6.3.0",
     "browser-sync": "^2.8.2",
@@ -145,7 +146,7 @@
     "npm-watch": "0.0.1",
     "parallelshell": "^2.0.0",
     "pre-commit": "^1.0.10",
-    "react": "^0.14.0",
+    "react": "<0.14.0",
     "react-i13n": "^0.1.30",
     "watchify": "^3.4.0"
   },
@@ -153,6 +154,7 @@
     "lint"
   ],
   "dependencies": {
-    "lodash": "^3.10.1"
+    "lodash": "^3.10.1",
+    "promisescript": "^1.1.0"
   }
 }

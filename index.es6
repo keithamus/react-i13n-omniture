@@ -1,11 +1,13 @@
 /* eslint-disable id-match, id-short, id-length, no-undef */
 import { assign } from 'lodash';
+import promisescript from 'promisescript';
 
-//<script
-//   type="text/javascript"
-//   src="https://cdn.static-economist.com/sites/default/files/external/ec_omniture/3_5/ec_omniture_s_code.js"
-// ></script>
-
+function loadOmniture() {
+  return promisescript({
+    url: '//cdn.static-economist.com/sites/default/files/external/ec_omniture/3_5/ec_omniture_s_code.js',
+    type: 'script',
+  });
+}
 
 export default {
   name: 'omniture',
@@ -25,15 +27,41 @@ export default {
     },
   },
   tracking(trackedProps) {
+    // Script has been already downloaded, we can send tracking metrics.
+    if (this.scriptLoaded) {
+      this.sendTracking(trackedProps);
+    } else {
+      // First call, be sure to download the omniture code.
+      this.initTracking(trackedProps);
+    }
+  },
+  initTracking(trackedProps) {
+    let me = this;
+    // Use an internal cache to store multiples events that can happens before
+    // the script is loaded.
+    me.pendingRequests.push(trackedProps);
+    loadOmniture().then(function() {
+      // Send all the pending request.
+      me.pendingRequests.map((request) => {
+        me.sendTracking(request);
+      });
+      // Clear the cache.
+      me.pendingRequests = [];
+    }).catch(function(e) {
+      console.error('An error loading or executing Recaptcha has occured: ', e.message);
+    });
+  },
+  sendTracking(trackedProps) {
     console.log(trackedProps);
     if (window.s_gi) {
       window.s = window.s_gi((process.env.NODE_ENV === 'production') ? 'economistcomprod' : 'economistcomdev');
       window.s = assign(window.s, trackedProps);
-      console.log(window.s);
       const omnitureTrackingCode = window.s.t();
       if (omnitureTrackingCode) {
         document.write(omnitureTrackingCode);
       }
     }
   },
+  scriptLoaded: false,
+  pendingRequests: [],
 };
