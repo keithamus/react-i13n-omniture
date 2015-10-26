@@ -36,28 +36,31 @@ export default {
     }
   },
   initTracking(trackedProps) {
-    let me = this;
+    let self = this;
     // Use an internal cache to store multiples events that can happens before
     // the script is loaded.
-    me.pendingRequests.push(trackedProps);
+    self.pendingRequests.push(trackedProps);
     loadOmniture().then(function() {
+      self.scriptLoaded = true;
       // Send all the pending request.
-      me.pendingRequests.map((request) => {
-        me.sendTracking(request);
+      self.pendingRequests.map((request) => {
+        self.sendTracking(request);
       });
       // Clear the cache.
-      me.pendingRequests = [];
+      self.pendingRequests = [];
     }).catch(function(e) {
-      console.error('An error loading or executing Recaptcha has occured: ', e.message);
+      console.error('An error loading or executing Omniture has occured: ', e.message);
     });
   },
   sendTracking(trackedProps) {
+    console.log('window.s', window.s);
     console.log(trackedProps);
     if (window.s_gi) {
       window.s = window.s_gi((process.env.NODE_ENV === 'production') ? 'economistcomprod' : 'economistcomdev');
       window.s = assign(window.s, trackedProps);
       const omnitureTrackingCode = window.s.t();
       if (omnitureTrackingCode) {
+        console.log('Writing Omniture code');
         document.write(omnitureTrackingCode);
       }
     }
