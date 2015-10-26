@@ -5,7 +5,7 @@ import ReactI13nOmniture from './index';
 import DemoApp from './demoapp';
 const TrackedApp = setupI13n(DemoApp, {
   rootModelData: {
-    omnitureProps: {
+    omnitureInitialProps: {
       visitorNamespace: 'economist',
       trackingServer: 'stats.economist.com',
       trackingServerSecure: 'sstats.economist.com',
