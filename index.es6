@@ -1,39 +1,44 @@
 /* eslint-disable id-match, id-short, id-length, no-undef */
 import { assign } from 'lodash';
 import promisescript from 'promisescript';
-
-function loadOmniture() {
-  return promisescript({
-    //url: '//cdn.static-economist.com/sites/default/files/external/ec_omniture/3_5/ec_omniture_s_code.js',
-    url: '//umbobabo.github.io/react-i13n-omniture/assets/omniture_h254.min.js',
-    type: 'script',
-  });
-}
+// Customisation of the script to keep the plugin reusable.
+import config from './config';
 
 export default {
   name: 'omniture',
   eventHandlers: {
+    /* eslint-disable no-unused-vars */
     pageview(payload, callback) {
-      this.setOmnitureInitialProps(payload.omnitureInitialProps);
-      this.tracking(payload.omnitureProps);
-
+      // We can manipulate props here.
+      const nodeProps = payload.i13nNode.getMergedModel();
+      // Then send the manipulated data to Omniture.
+      nodeProps.action = 'pageview';
+      nodeProps.page = payload.page;
+      this.tracking(nodeProps);
     },
     click(payload, callback) {
-      const i13nNode = payload.i13nNode;
       // Get the props from the node
-      if (i13nNode) {
-        const nodeProps = i13nNode.getMergedModel();
-        this.tracking(nodeProps.omnitureProps);
+      if (payload.i13nNode) {
+        let nodeProps = payload.i13nNode.getMergedModel();
+        // We can manipulate props here using functions customised in the config
+        // file.
+        console.log('Pre-manipulated parameters', nodeProps);
+        if(config.eventHandlers.click){
+          nodeProps = config.eventHandlers.click(nodeProps);
+        }
+        // Then send to Omniture
+        this.tracking(nodeProps);
       } else {
         return callback();
       }
     },
   },
   tracking(trackedProps) {
-    // It works only clientside
-    if (typeof window !== 'undefined'){
-      // Script has been already downloaded, we can send tracking metrics.
+    // Currently it works only clientside.
+    // I don't see any reason to use server-side at the moment.
+    if (typeof window !== 'undefined') {
       if (this.scriptLoaded) {
+        // Script has been already downloaded, we can send tracking metrics.
         this.sendTracking(trackedProps);
       } else {
         // First call, be sure to download the omniture code.
@@ -42,11 +47,12 @@ export default {
     }
   },
   initTracking(trackedProps) {
-    let self = this;
+    const self = this;
     // Use an internal cache to store multiples events that can happens before
     // the script is loaded.
     self.pendingRequests.push(trackedProps);
-    loadOmniture().then(function() {
+    // Async load of the necessary script.
+    self.loadExternalScript().then(() => {
       self.scriptLoaded = true;
       // Send all the pending request.
       self.pendingRequests.map((request) => {
@@ -54,28 +60,38 @@ export default {
       });
       // Clear the cache.
       self.pendingRequests = [];
-    }).catch(function(e) {
+    }).catch((e) => {
       console.error('An error loading or executing Omniture has occured: ', e.message);
     });
   },
+  loadExternalScript() {
+    // Currently using a pure version of the Omniture script, without logic.
+    return promisescript({
+      url: config.externalScript,
+      type: 'script',
+    });
+  },
   sendTracking(trackedProps) {
-    console.log(trackedProps);
+    console.log('SendTracking received', trackedProps);
     if (window.s_gi) {
       window.s = window.s_gi((process.env.NODE_ENV === 'production') ? 'economistcomprod' : 'economistcomdev');
       // Instead of using InitialProps we could freeze the immutable properties
       // that we want prevent to change.
-      window.s = assign(window.s, this.omnitureInitialProps, trackedProps);
-      console.log('window.s', window.s);
-      const omnitureTrackingCode = window.s.t();
+      window.s = assign(window.s, config.initialProps, trackedProps);
+      let omnitureTrackingCode = null;
+      if (trackedProps.action === 'pageview') {
+        console.log('Tracking pageview');
+        omnitureTrackingCode = window.s.t();
+      } else {
+        console.log('Tracking link');
+        // s.tl() will receive some arguments TBD.
+        omnitureTrackingCode = window.s.tl();
+      }
       if (omnitureTrackingCode) {
-        console.log('Writing Omniture code');
         document.write(omnitureTrackingCode);
       }
     }
   },
   scriptLoaded: false,
   pendingRequests: [],
-  setOmnitureInitialProps(defaultProps) {
-    this.omnitureInitialProps = defaultProps;
-  },
 };

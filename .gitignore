@@ -4,3 +4,4 @@ node_modules/
 !assets/*.js
 bundle.css
 *.html
+.DS_Store

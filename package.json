@@ -146,8 +146,6 @@
     "npm-watch": "0.0.1",
     "parallelshell": "^2.0.0",
     "pre-commit": "^1.0.10",
-    "react": "<0.14.0",
-    "react-i13n": "^0.1.30",
     "watchify": "^3.4.0"
   },
   "pre-commit": [
@@ -156,5 +154,8 @@
   "dependencies": {
     "lodash": "^3.10.1",
     "promisescript": "^1.1.0"
+  },
+  "peerDependencies": {
+    "react-i13n": "^0.2.0-rc1"
   }
 }
